@@ -1,0 +1,16 @@
+# Ödev 2
+Git ve Githubın faydaları 
+
+*Temel olarak özetlersek: bir projenin üstünde bir grubun çalışmasını sağlayan ve başka insanların kodlarına yardım edebileceğiniz, kendi ana kodunuza “zarar verir miyim” korkusu olmadan devam edebileceğiniz bir uygulamadır.
+
+*Repository: depodur, bilgilerin saklandığı merkezdir.
+
+*Commit: yerel proje dosyalarının geçici olarak depolandığı yerdir.
+
+*Branch (Türkçesi: dal): ana projede bir hata yapma korkusu olmadan, başka bir dal üzerinden çalışmayı sağlar; bu sayede dönülmez bir hatadan kaçınılır.
+
+*Stage: bir dosyanın kaydedilmeye hazırlandığı yerdir.
+
+*Merge: branch’ları birleştirir ve diğer dallara aktarmamızı sağlar.
+
+*Push: ana depoya, yani repository’ye gönderir. Bu kayıt işlemini kolaylaştırmak için git remote add origin <site-link> komutunu girersin, sonra git push -u origin <branch-ismi> yazarsın; bu komut, bilgileri gönderir.
