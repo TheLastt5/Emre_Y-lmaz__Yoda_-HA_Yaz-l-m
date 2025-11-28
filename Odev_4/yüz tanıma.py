@@ -11,7 +11,7 @@ BOX_COLOR = (255, 0, 0)
 TRACE_COLOR = (255, 0, 0) 
 TEXT_COLOR = (255, 255, 255) 
 COUNTER_COLOR = (0, 255, 0) 
-# Son 60 merkez noktasını verimli tutmak için deque kullanıyoruz.
+
 center_points_history = deque(maxlen=60)
 
 def main(source=0):
@@ -57,7 +57,6 @@ def main(source=0):
             face_detected = False
             center_points_history.clear() 
 
-        # Birden fazla yüz bulunsa bile hepsini işleriz.
         for (x, y, w, h) in faces:
             # 1. Bounding Box Çiz (Mavi) 
             cv2.rectangle(frame, (x, y), (x + w, y + h), BOX_COLOR, 2)
@@ -74,9 +73,6 @@ def main(source=0):
             center_text = f"Merkez: ({center_x}, {center_y})"
             cv2.putText(frame, center_text, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, TEXT_COLOR, 2, cv2.LINE_AA)
             
-        
-
- 
         if len(center_points_history) > 1:
             for i in range(1, len(center_points_history)):
                 pt1 = center_points_history[i - 1]
