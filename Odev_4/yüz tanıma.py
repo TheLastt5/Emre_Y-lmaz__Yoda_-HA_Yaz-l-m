@@ -6,15 +6,13 @@ import numpy as np # Gerekli olmasa da bazı OpenCV işlemlerinde kullanılabili
 # AYARLAR
 
 FACE_CASCADE = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-# Renkler (BGR formatı: Mavi)
+# Renkler
 BOX_COLOR = (255, 0, 0)
 TRACE_COLOR = (255, 0, 0) 
-TEXT_COLOR = (255, 255, 255) # Koordinat metni rengi (Beyaz)
-COUNTER_COLOR = (0, 255, 0)  # Sayaç metni rengi (Yoda Yeşili)
-
+TEXT_COLOR = (255, 255, 255) 
+COUNTER_COLOR = (0, 255, 0) 
 # Son 60 merkez noktasını verimli tutmak için deque kullanıyoruz.
 center_points_history = deque(maxlen=60)
-# ---------------------------
 
 def main(source=0):
     """
