@@ -1,0 +1,146 @@
+# Nesne Tespitinde Yıllara Göre İlerlemeler
+
+Nesne tespiti, bilgisayarlı görü alanının temel taşlarından biridir. Bir görüntüdeki nesnelerin nerede olduğunu ve ne olduğunu doğru bir şekilde belirlemeyi hedefler. Bu alandaki gelişmeler, makine öğrenimi ve derin öğrenmenin ilerlemesiyle paralel olarak gerçekleşmiştir.
+
+## 1. Nesne Tespitinde Devrimsel Gelişmeler
+
+Nesne tespiti, birkaç kritik olayla bugünkü seviyesine ulaşmıştır:
+
+* **Viola-Jones Algoritması (2001):** Derin öğrenme öncesi dönemin en önemli başarısıdır. Bu algoritma, özellikle yüz tespiti konusunda gerçek zamanlı performans sağlayarak klasik bilgisayarlı görü yöntemlerinin ne kadar etkili olabileceğini göstermiştir. Görüntüdeki basit görsel özellikleri (Haar özelliklerini) hızlıca tarayarak çalışır.
+
+* **ImageNet ve AlexNet (2012):** Bu olay, tüm bilgisayarlı görüntü dünyasını değiştirmiştir. Büyük ölçekli ImageNet yarışmasında, AlexNet adlı bir Evrişimli Sinir Ağı (CNN) ezici bir zafer kazanmış, derin öğrenme ile otomatik özellik çıkarımının ne kadar güçlü olduğunu kanıtlamıştır. Bu başarı, nesne tespiti araştırmalarının da tamamen CNN tabanlı mimarilere kaymasına neden olmuştur.
+
+* **R-CNN (2014):** Derin öğrenmeyi nesne tespiti görevine başarıyla entegre eden ilk büyük modeldir. R-CNN, görüntüde nesne olabilecek bölgeleri önce ayrı ayrı önerir, ardından her bir bölgeyi CNN'den geçirip sınıflandırır ve kutuyu ayarlar. Bu, sonraki tüm bölge tabanlı modellerin temelini atmıştır.
+
+* **YOLO (You Only Look Once) (2016):** Nesne tespiti alanında hız devrimini başlatan modeldir. Önceki modellerin aksine, YOLO, tüm görüntüyü tek bir ağ geçişinde işleyerek aynı anda hem nesnenin yerini hem de sınıfını tahmin eder ismi de burden gelmiştir sadece bir kez bakarsın. Bu tek aşamalı yaklaşım, gerçek zamanlı uygulamaların önünü açmıştır.
+
+## 2. CNN Tabanlı Modellerin Farkı ve Mantığı
+
+CNN, nesne tespiti alanında devrim yaratmıştır çünkü klasik yöntemlerin zayıf kaldığı bir noktayı güçlendirmiştir: Otomatik Özellik Çıkarımı.
+
+### CNN'lerin Klasik Modellerden Farkı
+Klasik modeller, insan uzmanlığıyla belirlenmiş elle tasarlanmış özelliklere güvenirken, CNN'ler tamamen farklı çalışır. CNN'ler, büyük veri kümeleri üzerinde eğitilirken, bir nesneyi tanımlamak için gereken en iyi özellikleri önem sırasına göre otomatik olarak öğrenirler.
+
+### CNN Yapısının Mantığı
+CNN'ler, görüntü verilerini işlemek için özel olarak tasarlanmıştır. Temel olarak 3 katmandan oluşur.
+
+* **Evrişim Katmanı:** Bu, CNN'in kalbidir. Filtreler kullanılarak görüntü üzerinde gezinti yapılır ve görüntüdeki yerel desenler çıkarılır. Her bir filtre, görüntünün farklı bir özelliğini yakalamak üzere eğitilir. Evrişim işlemi sonucunda özellik haritaları oluşur.
+
+* **Havuzlama Katmanı:** Özellik haritalarının boyutunu küçültür. Bu, hem hesaplama maliyetini düşürür hem de modelin nesnenin küçük konum değişikliklerinden etkilenmesini azaltarak genelleme yeteneğini artırır.
+
+* **Tam Bağlantılı Katmanlar:** Evrişim katmanlarında çıkarılan tüm bu özellikler en sona doğru bir araya getirilir ve standart sinir ağları gibi çalışarak nihai sınıflandırma ve konumlandırma tahminlerini yapar.
+
+## 3. Sektörde Kullanılan Nesne Tespit Modelleri
+
+Sektörde kullanılan modern nesne tespiti modelleri, hız ve doğruluk dengesine göre iki ana kategoriye ayrılır.
+
+### A. İki Aşamalı Dedektörler
+Bu modeller, önce potansiyel nesne bölgelerini önerir, ardından ikinci bir aşamada bu bölgeleri detaylıca analiz ederek sınıflandırma ve kutu iyileştirmesi yapar. Bu yaklaşım, yüksek doğruluk sağlar ancak daha yavaştır.
+
+* **Faster R-CNN:** R-CNN ailesinin en başarılısıdır. Bölge önerme işini hızlandırmak için ağına bir RPN ekler. Özellikle küçük nesnelerin tespitinde yüksek doğruluk arayan uygulamalar için hala bir referans noktasıdır.
+
+* **Mask R-CNN:** Faster R-CNN'in bir uzantısı olup, nesne tespitiyle birlikte her bir nesne için piksel düzeyinde bir segmentasyon maskesi de çıkarır.
+
+### B. Tek Aşamalı Dedektörler (One-Stage Detectors)
+Bu modeller, bölge önerisi ve sınıflandırma/konumlandırma adımlarını tek bir ağ geçişinde birleştirir. Bu, onlara muazzam bir hız sağlar ve gerçek zamanlı uygulamaların vazgeçilmezidir.
+
+* **YOLO Ailesi:** Sektörde en popüler olan model ailesidir. Nesne tespitini bir regresyon problemi olarak ele alır. Son versiyonları, Two-Stage modellerle rekabet edebilecek kadar yüksek doğruluk sağlarken, çok daha hızlı çalışır. Hızın ve gerçek zamanlı performansın kritik olduğu otonom araçlar ve video izleme sistemlerinde yaygın olarak kullanılır.
+
+* **SSD (Single Shot MultiBox Detector):** YOLO gibi tek aşamalıdır ancak farklı ölçeklerdeki nesneleri daha iyi yakalamak için CNN'in farklı katmanlarından gelen özellik haritalarını kullanır.
+
+* **RetinaNet:** Tek aşamalı dedektörlerdeki doğruluk sorununu çözmek için Focal Loss adı verilen yeni bir kayıp fonksiyonu sunmuştur. Doğruluk açısından Faster R-CNN'e yaklaşmayı başarmıştır.
+
+### Karşılaştırma ve Sektör Tercihleri
+
+* **Hız vs. Doğruluk Dengesi:** İki aşamalı modeller Faster R-CNN, doğrulukta genellikle en iyi sonucu verirken, hızları düşüktür. Tek aşamalı modeller YOLO, hızları nedeniyle gerçek zamanlı uygulamalarda üstündür.
+
+* **Sektör Tercihi:** Günümüzde, YOLO, mükemmel hız ve yüksek doğruluk dengesi nedeniyle endüstriyel uygulamaların ve gerçek zamanlı sistemlerin büyük çoğunluğunda tercih edilen çözümdür. Ancak, küçük nesnelerin tespiti gibi çok yüksek doğruluk gerektiren niş alanlarda Faster R-CNN hala kullanılabilmektedir.
+
+# YOLO: Temel Kavramlar
+
+YOLO, yani Sadece Bir Kez Bakarsın, bilgisayarların resimlerdeki nesneleri görmesini ve nerede olduklarını belirlemesini sağlayan, günümüzün en hızlı ve en popüler yapay zeka sistemlerinden biridir.
+
+## 1. YOLO Nedir ve Nasıl Çalışır?
+Diğer eski sistemler, bir resimde nerede nesne olabileceğini bulmak için resmi defalarca tarardı. YOLO ise resmi sadece tek bir geçişte inceler.
+
+**Çalışma Mantığı:**
+
+* YOLO, resmi küçük bir ızgaraya böler.
+* Her bir ızgara hücresi, eğer bir nesnenin merkezi o hücreye düşüyorsa, o nesneyi tahmin etmekle yükümlüdür.
+* **Tahmin yaparken üç şeyi söyler:**
+    1. **Kutu Koordinatları:** Nesneyi çevreleyen dikdörtgen kutunun tam yeri ve boyutu.
+    2. **Nesne Güveni:** Bu kutunun içinde gerçekten bir nesne olup olmadığına dair ne kadar emin olduğu.
+    3. **Sınıfı:** Nesnenin türü (araba mı, kedi mi, trafik lambası mı).
+* Son olarak, aynı nesneyi çevreleyen yüzlerce kutu arasından en iyilerini seçmek için NMS denen bir filtreleme yapar ve fazlalıkları atar.
+
+## 2. Loss Functions (Kayıp Fonksiyonları) ve mAP
+Eğitim sırasında, modelin ne kadar hata yaptığını ölçmemiz gerekir. Buna Kayıp Fonksiyonu denir.
+
+* **Box Loss:** Modelin tahmin ettiği kutu ile nesnenin gerçek yeri arasındaki hatayı ölçer. "Nesneyi ne kadar yanlış yere koydun?" sorusunun cevabıdır.
+* **Cls Loss:** Modelin nesnenin türünü ne kadar yanlış tahmin ettiğini ölçer.
+* **Val Loss:** Modelin, daha önce hiç görmediği doğrulama seti üzerindeki toplam hata miktarıdır. Bu, modelin ezber yapıp yapmadığını (overfitting) anlamamızı sağlar.
+
+**mAP:**
+Bu, YOLO'nun başarısını ölçen nihai puandır.
+* Bir futbolcunun hem kaç şut attığına hem de attığı şutların kaçının gol olduğuna bakmak gibidir.
+* mAP, tüm nesne sınıfları için bu hassasiyet ve duyarlılık skorlarının ortalamasını alarak, modelin hem nesnelerin çoğunu bulup bulmadığını hem de bulduğu nesnelerin yerini ne kadar doğru tahmin ettiğini gösteren tek bir değer verir.
+
+## 3. Temel Hyperparameterler
+Bunlar, eğitimi başlatmadan önce bizim ayarlamamız gereken anahtar ayarlardır:
+
+* **Learning Rate:** Modelin her adımda ne kadar hızlı yeni şeyler öğreneceğini belirler. Çok hızlı olursa dersi kaçırır, çok yavaş olursa uykusu gelir.
+* **Batch Size:** Modelin ağırlıklarını güncellemeden önce tek seferde kaç resmi inceleyeceğini gösterir. Bu, genellikle kullandığınız GPU'nun gücüne bağlıdır.
+* **Epochs:** Eğitim veri setinin tamamını baştan sona kaç kez inceleyeceğini belirler.
+
+## 4. YOLO Modelleri ve Sürümleri
+YOLO artık sadece nesne bulmakla kalmıyor, farklı görevleri de yapabiliyor:
+
+* **Tespit:** Nesneyi dikdörtgen kutuyla bulur.
+* **Segmentasyon:** Nesneyi kutuyla bulmak yerine, piksel piksel sınırlarını çizer.
+
+**Sürümler (s, m, l, x):**
+Bu harfler modelin büyüklüğünü ve gücünü gösterir:
+* **s:** Hızlı çalışır, az hesaplama gücü ister, doğruluk biraz düşüktür.
+* **m:** Hız ve doğruluk arasında iyi bir denge kurar.
+* **l ve x:** Daha yavaş çalışır, daha çok hesaplama gücü ister ama daha doğrudur.
+* Bu farkı yaratan temel şey, sinir ağındaki katman ve her katmandaki filtre sayısıdır.
+
+## 5. İdeal Dataset Özellikleri
+Modelin iyi çalışması için beslediğimiz verinin iyi olması şart:
+
+* **Çok Çeşitlilik:** Nesnelerinizi sadece iyi aydınlatılmış ortamlarda değil; gece, gündüz, farklı açılardan, farklı arka planlarda çekilmiş resimlerle beslemelisiniz.
+* **Denge:** Eğer veri setinizde 1453 araba resmi ve sadece 10 bisiklet resmi varsa, model bisikletleri bulmayı öğrenemez. Sınıf sayıları dengeli olmalıdır.
+* **Doğruluk:** Çizdiğiniz kutular tutarlı ve tam olmalıdır.
+
+## 6. Augmentation
+Augmentation, var olan resimlerinizden yeni resimler üretme sanatıdır.
+
+* Bir araba resmini alıp yatay çevirirseniz, model için bu yepyeni bir eğitim örneği olur.
+* Amaç, elinizdeki az sayıda veriyi milyonlarca farklı varyasyonla modelin karşısına çıkarmaktır ki, model ezberlemesin, gerçekten öğrensin.
+* Basit işlemler ve YOLO'ya özel Mosaic gibi teknikler dört farklı resmi tek bir resimde birleştirmek kullanılır.
+
+## 7. Roboflow ve Veri Etiketleme
+Roboflow, veri setinizi yönetmenizi, etiketlemenizi ve anında eğitime hazır hale getirmenizi sağlayan web tabanlı bir araçtır.
+
+**Etiketleme Nasıl Yapılır?**
+* Resmi yüklersiniz.
+* Fareyi kullanarak, tespitlemek istediğiniz nesnenin etrafına sıkıca bir dikdörtgen kutu çizersiniz.
+* Bu kutuya, o nesnenin sınıf adını örneğin "kedi" atarsınız.
+* Roboflow bu kutu ve sınıf bilgilerini alıp, YOLO'nun anlayacağı formatta hazırlar.
+
+**Diğer Etiketleme Platformları:**
+* **LabelImg:** En basitidir, yerel bilgisayarınızda çalışır, sadece kutu etiketleme için iyidir ve ücretsizdir.
+* **CVAT:** Web tabanlı, daha gelişmiştir. Segmentasyon (piksel maskeleri) ve ekip çalışması için çok daha güçlü özelliklere sahiptir.
+
+## 8. Google Colab'de YOLO Eğitimi
+Google Colab, ücretsiz GPU sağladığı için yapay zeka eğitimleri için ideal bir platformdur.
+
+İlk olarak, veri setim Google Drive içerisinde bulunduğu için `drive.mount` komutuyla Drive hesabımı Colab ortamına bağladım. Bu sayede veri setini indirmekle uğraşmadan doğrudan erişim sağladım.
+
+Modelin eğitimi öncesinde, YOLOv8'in veri setini doğru okuyabilmesi için gerekli olan `data.yaml` dosyasını düzenledim. Bu dosyadaki eğitim ve doğrulama klasörlerinin yollarını, Colab üzerindeki tam dosya yolları olacak şekilde güncelleyen bir kod bloğu yazdım.
+
+Model seçimi olarak Small modelini tercih ettim. Bu modeli seçmemin nedeni, ödev için yeterli doğruluğu sunarken aynı zamanda eğitim süresinin bilgisayarı yormayacak kadar kısa olmasıydı. Modeli `model.train` fonksiyonu ile çağırdım; eğitim süresini 50 epoch (tur), resim boyutunu 640 piksel ve batch size 16 olarak ayarlayıp eğitimi başlattım.
+
+Eğitim tamamlandıktan sonra modelin başarısını ölçmek için runs klasöründe oluşan performans grafiklerini inceledim. Özellikle Confusion Matrix görselini kodla ekrana getirerek, modelin hangi geometrik şekli ne kadar doğru bildiğini veya hangilerini birbiriyle karıştırdığını analiz ettim.
+
+Son aşamada ise modelin gerçek performansını görmek için doğrulama veri setinden rastgele fotoğraflar seçtim. `model.predict` komutuyla bu fotoğraflar üzerinde tahmin yaptırdım ve sonuçları görselleştirerek modelin nesneleri (mavi kare, kırmızı üçgen vb.) doğru kutucuk içine alıp almadığını kontrol ettim.
