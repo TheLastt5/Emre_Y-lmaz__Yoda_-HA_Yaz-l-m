@@ -139,7 +139,7 @@ Google Colab, ücretsiz GPU sağladığı için yapay zeka eğitimleri için ide
 
 Modelin eğitimi öncesinde, YOLOv8'in veri setini doğru okuyabilmesi için gerekli olan `data.yaml` dosyasını düzenledim. Bu dosyadaki eğitim ve doğrulama klasörlerinin yollarını, Colab üzerindeki tam dosya yolları olacak şekilde güncelleyen bir kod bloğu yazdım.
 
-Model seçimi olarak Small modelini tercih ettim. Bu modeli seçmemin nedeni, ödev için yeterli doğruluğu sunarken aynı zamanda eğitim süresinin bilgisayarı yormayacak kadar kısa olmasıydı. Modeli `model.train` fonksiyonu ile çağırdım; eğitim süresini 50 epoch (tur), resim boyutunu 640 piksel ve batch size 16 olarak ayarlayıp eğitimi başlattım.
+Model seçimi olarak Small modelini tercih ettim. Bu modeli seçmemin nedeni, ödev için yeterli doğruluğu sunarken aynı zamanda eğitim süresinin bilgisayarı yormayacak kadar kısa olmasıydı. Modeli `model.train` fonksiyonu ile çağırdım; eğitim süresini 30 epoch (tur), resim boyutunu 640 piksel ve batch size 16 olarak ayarlayıp eğitimi başlattım.
 
 Eğitim tamamlandıktan sonra modelin başarısını ölçmek için runs klasöründe oluşan performans grafiklerini inceledim. Özellikle Confusion Matrix görselini kodla ekrana getirerek, modelin hangi geometrik şekli ne kadar doğru bildiğini veya hangilerini birbiriyle karıştırdığını analiz ettim.
 
