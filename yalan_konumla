@@ -1,0 +1,155 @@
+#include <SoftwareSerial.h>
+#include <TinyGPS++.h>
+
+// ================= TEST / UÇUŞ MODU AYARI =================
+const bool TEST_MODU = false; 
+const bool SAHTE_YER_GPS_KULLAN = true; 
+// ==========================================================
+
+// ================= MOTOR KALİBRASYON AYARLARI =================
+// Motorun 1 adım (step) atıldığında fiziksel olarak kaç derece döndüğü.
+// Standart NEMA 17 (mikroadımsız): 1.8
+// 1/16 Mikroadım: 0.1125
+const float DERECE_PER_STEP = 1.8; 
+// ==============================================================
+
+// CNC Shield Y-Ekseni Pinleri
+const int stepYPin = 3;
+const int dirYPin = 6;
+const int enablePin = 8;
+
+// GPS SoftwareSerial Pinleri
+const int RXPin = 10; 
+const int TXPin = 11; 
+const uint32_t GPSBaud = 9600; 
+
+TinyGPSPlus gps;
+SoftwareSerial gpsSerial(RXPin, TXPin);
+
+bool baseLocationAcquired = false;
+double baseLat = 0.0;
+double baseLng = 0.0;
+
+double droneLat = 0.0;
+double droneLng = 0.0;
+float targetAngle = 0.0;        
+bool firstTargetReceived = false; 
+
+// Motor hareket toleransı (Motorun duracağı hassasiyet)
+const float deadzone = 4.0; 
+float currentAngle = 0.0; 
+
+void moveMotor(int dirPin, int stepPin, int direction);
+
+void setup() {
+  Serial.begin(115200);     
+  gpsSerial.begin(GPSBaud); 
+
+  pinMode(stepYPin, OUTPUT);
+  pinMode(dirYPin, OUTPUT);
+  pinMode(enablePin, OUTPUT);
+  digitalWrite(enablePin, LOW); 
+
+  Serial.println("Sistem baslatildi...");
+  
+  if (TEST_MODU) {
+    Serial.println("[MOD] TEST MODU AKTIF: Sabit 90 dereceye donus testi yapilacak.");
+  } else {
+    Serial.println("[MOD] UCUS MODU AKTIF.");
+    
+    if (SAHTE_YER_GPS_KULLAN) {
+      baseLat = 41.025500; 
+      baseLng = 28.893000; 
+      baseLocationAcquired = true;
+      Serial.println("\n--- [SIMULASYON] SAHTE YER (BAZ) KONUMU SAKLANDI ---");
+      Serial.print("Yer İstasyonu: "); Serial.print(baseLat, 6); Serial.print(", "); Serial.println(baseLng, 6);
+      Serial.println("Lutfen Seri Port uzerinden IHA konumunu girin (Ornek: 41.030500,28.898000)");
+    } else {
+      Serial.println("Gercek GPS sinyali bekleniyor...");
+    }
+  }
+}
+
+void loop() {
+  // -------------------------------------------------------------------------
+  // SENARYO A: TEST MODU (İHA yoksa direkt çalışır)
+  // -------------------------------------------------------------------------
+  if (TEST_MODU) {
+    targetAngle = 90.0; 
+    
+    float errorAngle = targetAngle - currentAngle;
+
+    if (abs(errorAngle) > deadzone) {
+      if (errorAngle > 0) {
+        moveMotor(dirYPin, stepYPin, HIGH); 
+        currentAngle += DERECE_PER_STEP; // KALİBRASYON BURADA UYGULANIYOR
+      } else {
+        moveMotor(dirYPin, stepYPin, LOW);  
+        currentAngle -= DERECE_PER_STEP; // KALİBRASYON BURADA UYGULANIYOR
+      }
+      Serial.print("Motor Donuyor... Guncel Aci: "); Serial.println(currentAngle);
+    } else {
+      static bool hedefMesajiVerildi = false;
+      if (!hedefMesajiVerildi) {
+        Serial.println("-> HEDEF BASARIYLA YAKALANDI: Anten 90 derecede sabitlendi!");
+        hedefMesajiVerildi = true;
+      }
+    }
+    return;
+  }
+
+  // -------------------------------------------------------------------------
+  // SENARYO B: GERÇEK UÇUŞ / SAHTE VERİ MODU
+  // -------------------------------------------------------------------------
+  if (!SAHTE_YER_GPS_KULLAN) {
+    while (gpsSerial.available() > 0) {
+      if (gps.encode(gpsSerial.read())) {
+        if (!baseLocationAcquired && gps.location.isValid()) {
+          baseLat = gps.location.lat();
+          baseLng = gps.location.lng();
+          baseLocationAcquired = true;
+          Serial.println("\n--- GERCEK YER (BAZ) KONUMU SAKLANDI ---");
+        }
+      }
+    }
+  }
+
+  if (baseLocationAcquired && Serial.available() > 0) {
+    String incomingData = Serial.readStringUntil('\n');
+    incomingData.trim(); 
+    
+    int commaIndex = incomingData.indexOf(',');
+    if (commaIndex > 0) {
+      droneLat = incomingData.substring(0, commaIndex).toDouble();
+      droneLng = incomingData.substring(commaIndex + 1).toDouble();
+      
+      targetAngle = gps.courseTo(baseLat, baseLng, droneLat, droneLng);
+      firstTargetReceived = true;
+      
+      Serial.print("[YENI HEDEF] IHA Koor: "); Serial.print(droneLat, 6); Serial.print(","); Serial.println(droneLng, 6);
+      Serial.print("Hesaplanan Hedef Aci: "); Serial.println(targetAngle);
+    }
+  }
+
+  if (baseLocationAcquired && firstTargetReceived) {
+    float errorAngle = targetAngle - currentAngle;
+    
+    if (abs(errorAngle) > deadzone) {
+      if (errorAngle > 0) {
+        moveMotor(dirYPin, stepYPin, HIGH);
+        currentAngle += DERECE_PER_STEP; // KALİBRASYON BURADA UYGULANIYOR
+      } else {
+        moveMotor(dirYPin, stepYPin, LOW);
+        currentAngle -= DERECE_PER_STEP; // KALİBRASYON BURADA UYGULANIYOR
+      }
+    }
+  }
+}
+
+void moveMotor(int dirPin, int stepPin, int direction) {
+  digitalWrite(dirPin, direction);
+  digitalWrite(stepPin, HIGH);
+  delayMicroseconds(800); 
+  digitalWrite(stepPin, LOW);
+  delayMicroseconds(800);
+}
