@@ -1,52 +1,91 @@
 #include <SoftwareSerial.h>
 #include <TinyGPS++.h>
 
+// ================= TEST / UÇUŞ MODU AYARI =================
+// Eğer elinizde İHA yoksa ve sadece motor testi yapacaksanız burayı true yapın.
+// Gerçek uçuşta Python'dan veri almak için burayı false yapın.
+const bool TEST_MODU = true; 
+// ==========================================================
+
 // CNC Shield Y-Ekseni Pinleri
 const int stepYPin = 3;
 const int dirYPin = 6;
 const int enablePin = 8;
 
-// GPS SoftwareSerial Pinleri (Yer İstasyonu GPS'i)
-const int RXPin = 10; // GPS TX buraya bağlanır
-const int TXPin = 11; // GPS RX buraya bağlanır
-const uint32_t GPSBaud = 9600; // Ublox M8N varsayılan baud hızı
+// GPS SoftwareSerial Pinleri
+const int RXPin = 10; 
+const int TXPin = 11; 
+const uint32_t GPSBaud = 9600; 
 
 TinyGPSPlus gps;
 SoftwareSerial gpsSerial(RXPin, TXPin);
 
-// Başlangıç (Yer İstasyonu) konumu değişkenleri
 bool baseLocationAcquired = false;
 double baseLat = 0.0;
 double baseLng = 0.0;
 
-// Python'dan (Bilgisayardan) gelecek anlık drone konumları
 double droneLat = 0.0;
 double droneLng = 0.0;
-float targetAngle = 0.0;        // Dinamik hesaplanan hedef açı
-bool firstTargetReceived = false; // Python'dan veri akışı başladı mı?
+float targetAngle = 0.0;        
+bool firstTargetReceived = false; 
 
 // Motor hareket toleransı
-const float deadzone = 4.0; // 4 derecelik ölü bölge (Gereksiz titremeyi engeller)
+const float deadzone = 4.0; 
 float currentAngle = 0.0; 
 
 void moveMotor(int dirPin, int stepPin, int direction);
 
 void setup() {
-  Serial.begin(115200);     // Python'dan gelen verileri OKUMAK için (Hızlar eşitlendi)
-  gpsSerial.begin(GPSBaud); // Yer istasyonundaki kendi GPS modülümüz için
+  Serial.begin(115200);     
+  gpsSerial.begin(GPSBaud); 
 
-  // Motor pin kurulumları
   pinMode(stepYPin, OUTPUT);
   pinMode(dirYPin, OUTPUT);
   pinMode(enablePin, OUTPUT);
-  digitalWrite(enablePin, LOW); // Motor sürücülerini aktif et (LOW = Enable)
+  digitalWrite(enablePin, LOW); 
 
-  Serial.println("Arduino Sistemi baslatildi. Yer GPS'i uydulari ariyor...");
+  Serial.println("Sistem baslatildi...");
+  if (TEST_MODU) {
+    Serial.println("[MOD] TEST MODU AKTIF: Sabit 90 dereceye donus testi yapilacak.");
+  } else {
+    Serial.println("[MOD] UCUS MODU AKTIF: Yer GPS'i ve Python verisi bekleniyor.");
+  }
 }
 
 void loop() {
   // -------------------------------------------------------------------------
-  // ADIM 1: Yer İstasyonunun Sabit Konumunu Alma (Sistem açılınca 1 kez)
+  // SENARYO A: TEST MODU (İHA yoksa direkt çalışır)
+  // -------------------------------------------------------------------------
+  if (TEST_MODU) {
+    // GPS ve Python beklemeden direkt hedefi 90 dereceye kilitler
+    targetAngle = 90.0; 
+    
+    float errorAngle = targetAngle - currentAngle;
+
+    if (abs(errorAngle) > deadzone) {
+      if (errorAngle > 0) {
+        moveMotor(dirYPin, stepYPin, HIGH); 
+        currentAngle += 0.1; 
+      } else {
+        moveMotor(dirYPin, stepYPin, LOW);  
+        currentAngle -= 0.1;
+      }
+      
+      // Seri porttan anlık motor konumunu izleyebilirsiniz
+      Serial.print("Motor Donuyor... Guncel Aci: "); Serial.println(currentAngle);
+    } else {
+      // Hedefe ulaşıldığında motor durur ve haber verir
+      static bool hedefMesajiVerildi = false;
+      if (!hedefMesajiVerildi) {
+        Serial.println("-> HEDEF BASARIYLA YAKALANDI: Anten 90 derecede sabitlendi!");
+        hedefMesajiVerildi = true;
+      }
+    }
+    return; // Test modundaysa aşağıdaki karmaşık GPS kodlarına hiç girme, döngü başa dönsün
+  }
+
+  // -------------------------------------------------------------------------
+  // SENARYO B: GERÇEK UÇUŞ MODU (TEST_MODU = false ise burası çalışır)
   // -------------------------------------------------------------------------
   while (gpsSerial.available() > 0) {
     if (gps.encode(gpsSerial.read())) {
@@ -54,65 +93,41 @@ void loop() {
         baseLat = gps.location.lat();
         baseLng = gps.location.lng();
         baseLocationAcquired = true;
-        
         Serial.println("\n--- YER (BAZ) KONUMU SAKLANDI ---");
-        Serial.print("Enlem: "); Serial.println(baseLat, 6);
-        Serial.print("Boylam: "); Serial.println(baseLng, 6);
-        Serial.println("---------------------------------");
-        Serial.println("Yer sabitlendi. Bilgisayardan (Python) veri bekleniyor...");
       }
     }
   }
 
-  // -------------------------------------------------------------------------
-  // ADIM 2: Bilgisayardan (Python) Gelen Verileri Dinleme ve Açı Hesaplama
-  // -------------------------------------------------------------------------
-  // Kendi konumumuzu aldıysak ve bilgisayardan veri akışı başladıysa içeri girer
   if (baseLocationAcquired && Serial.available() > 0) {
-    
-    // Satır sonu karakterine (\n) kadar gelen "Enlem,Boylam" metnini oku
     String incomingData = Serial.readStringUntil('\n');
     incomingData.trim();
-    
     int commaIndex = incomingData.indexOf(',');
-    
-    // Eğer gelen veri kurallara uygunsa (virgül içeriyorsa) parçala
     if (commaIndex > 0) {
       droneLat = incomingData.substring(0, commaIndex).toDouble();
       droneLng = incomingData.substring(commaIndex + 1).toDouble();
-      
-      // TAMİR EDİLEN NOKTA: Sabit 90 derece silindi. 
-      // Kendi GPS'imiz ile Dronun GPS'i arasındaki coğrafi pusula açısı hesaplanıyor.
       targetAngle = gps.courseTo(baseLat, baseLng, droneLat, droneLng);
       firstTargetReceived = true;
     }
   }
 
-  // -------------------------------------------------------------------------
-  // ADIM 3: Motoru Hedef Açıya Doğru Çevirme
-  // -------------------------------------------------------------------------
   if (baseLocationAcquired && firstTargetReceived) {
-    
     float errorAngle = targetAngle - currentAngle;
-
-    // Açısal hata tolerans sınırından büyükse motoru adım attır
     if (abs(errorAngle) > deadzone) {
       if (errorAngle > 0) {
-        moveMotor(dirYPin, stepYPin, HIGH); // Saat yönü dön
-        currentAngle += 0.1; // Motorunuzun adım/derece kalibrasyonuna göre güncelleyebilirsiniz
+        moveMotor(dirYPin, stepYPin, HIGH);
+        currentAngle += 0.1;
       } else {
-        moveMotor(dirYPin, stepYPin, LOW);  // Saat yönünün tersine dön
+        moveMotor(dirYPin, stepYPin, LOW);
         currentAngle -= 0.1;
       }
     }
   }
 }
 
-// Step motor sürme fonksiyonu
 void moveMotor(int dirPin, int stepPin, int direction) {
   digitalWrite(dirPin, direction);
   digitalWrite(stepPin, HIGH);
-  delayMicroseconds(800); // Motor dönüş hızı (Küçüldükçe hızlanır)
+  delayMicroseconds(800); 
   digitalWrite(stepPin, LOW);
   delayMicroseconds(800);
 }
